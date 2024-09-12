@@ -36,3 +36,4 @@ Route::post('/juices/store', 'App\Http\Controllers\JuiceController@store')->name
 Route::get('/juices/edit/{juice}', 'App\Http\Controllers\JuiceController@edit')->name('juice.edit');
 Route::put('/juices/edit/{juice}', 'App\Http\Controllers\JuiceController@update')->name('juice.update');
 
+

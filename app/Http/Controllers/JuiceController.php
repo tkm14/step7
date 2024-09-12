@@ -15,31 +15,18 @@ class JuiceController extends Controller
      */
     public function index(Request $request)
     {
-        $makerList = $request->input('makerList');
-        $juices = Juice::query();
 
-        if (isset($request->keyword)) {
-            $juices = $juices
-                ->where('name', "LIKE", "%$request->keyword%")
-                ->orWhere('comment',"LIKE", "%$request->keyword%");
-            }
-        if (isset($request->makerList)) {
-            $juices = $juices
-                ->where('maker', "$makerList");
-            }
-    
-        $juices = $juices->paginate(5);
+        $juice = new Juice;
+        $juice = $juice->search($request->keyword, $request->makerList);
         $makers = Maker::all();
-        
 
-        return view('juices.index', [
-            'juices' => $juices,
+        return view('juices.index',[
+            'juices' => $juice,
             'keyword' => $request->keyword,
-            'makerList' => $request->$makerList,
-        ],
-    compact('makers'));
-    }
+            'makerList' => $request->maker,
+        ],compact('makers'));
 
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -60,30 +47,9 @@ class JuiceController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'maker' => 'required',
-            'kakaku' => 'required',
-            'zaiko' => 'required',
-            'commment' => 'nullable',
-            'img_path' => 'nullable|image|max:2048',
-        ]);
-
         $juice = new Juice;
-        $juice->name = $request->input(['name']);
-        $juice->maker = $request->input(['maker']);
-        $juice->kakaku = $request->input(['kakaku']);
-        $juice->zaiko = $request->input(['zaiko']);
-        $juice->comment = $request->input(['comment']);
+        $juice = $juice->registerJuice($request);
 
-
-        if($request->hasFile('img_path')){
-            $filename = $request->img_path->getClientOriginalName();
-            $filePath = $request->img_path->storeAs('juices', $filename, 'public');
-            $juice->img_path = '/storage/' . $filePath;
-        };
-
-        $juice->save();
 
         return redirect()->route('juices.index');
 
@@ -125,36 +91,9 @@ class JuiceController extends Controller
      */
     public function update(Request $request, Juice $juice)
     {
-        $request->validate([
-            'name' => 'required',
-            'maker' => 'required',
-            'kakaku' => 'required',
-            'zaiko' => 'required',
-            'comment' => 'nullable',
-            'img_path' => 'nullable|image|max:2048',
-
-        ]);
-
-
-        $juice->name = $request->input(['name']);
-        $juice->maker = $request->input(['maker']);
-        $juice->kakaku = $request->input(['kakaku']);
-        $juice->zaiko = $request->input(['zaiko']);
-        $juice->comment = $request->input(['comment']);
+        $juice = $juice->upJuice($request, $juice);
+        return redirect()->route('juices.index');
         
-
-
-        if($request->hasFile('img_path')){
-            $filename = $request->img_path->getClientOriginalName();
-            $filePath = $request->img_path->storeAs('juices', $filename, 'public');
-            $juice->img_path = '/storage/' . $filePath;
-
-        $juice->save();
-
-        return redirect()->route('juices.index')
-        ->with('success', 'Juice updated successfully');
-        
-    }
     }
     /**
      * Remove the specified resource from storage.
@@ -164,7 +103,7 @@ class JuiceController extends Controller
      */
     public function destroy(Juice $juice)
     {
-        $juice->delete();
+        $juice = $juice->destroyJuice($juice);
 
         return redirect('/juices');
     }
